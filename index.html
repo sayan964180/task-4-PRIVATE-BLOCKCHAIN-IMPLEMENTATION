@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Voting DApp</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      text-align: center;
+      padding-top: 100px;
+    }
+    .card {
+      background-color: white;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: inline-block;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #2e86de;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #1b4f72;
+    }
+    select {
+      padding: 10px;
+      margin-top: 20px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>🗳 Voting DApp</h2>
+    <button onclick="connectWallet()">Connect Wallet</button><br>
+
+    <div id="voteSection" style="display:none;">
+      <select id="candidateSelect">
+        <option value="0">Alice</option>
+        <option value="1">Bob</option>
+        <option value="2">Charlie</option>
+      </select><br>
+      <button onclick="vote()">Vote</button>
+      <p id="status"></p>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.min.js"></script>
+  <script>
+    let contract;
+
+    async function connectWallet() {
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          await window.ethereum.request({ method: 'eth_requestAccounts' });
+          document.getElementById('voteSection').style.display = 'block';
+          alert("✅ Wallet connected!");
+
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const signer = provider.getSigner();
+
+          const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+          const contractABI = [
+            // Replace this with your contract's ABI
+            "function vote(uint candidate) public"
+          ];
+
+          contract = new ethers.Contract(contractAddress, contractABI, signer);
+        } catch (error) {
+          console.error("❌ Access denied by user:", error);
+        }
+      } else {
+        alert("🦊 MetaMask is not installed! Please install it.");
+      }
+    }
+
+    async function vote() {
+      const candidateIndex = document.getElementById("candidateSelect").value;
+      try {
+        const tx = await contract.vote(candidateIndex);
+        await tx.wait();
+        document.getElementById("status").innerText = "✅ Vote cast successfully!";
+      } catch (err) {
+        document.getElementById("status").innerText = "❌ Error casting vote.";
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
